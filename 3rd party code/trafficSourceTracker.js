@@ -1,19 +1,8 @@
 (function(window, document) {
 	window.dataLayer = window.dataLayer || [];
 
-	function splitHostname() {
-		var result = {};
-		var regexParse = new RegExp('([a-z\-0-9]{2,63})\.([a-z\.]{2,5})$');
-		var urlParts = regexParse.exec(window.location.hostname);
-		result.domain = urlParts[1];
-		result.type = urlParts[2];
-		//result.subdomain = window.location.hostname.replace(result.domain + '.' + result.type, '').slice(0, -1);;
-		//console.log(result.subdomain);
 
-		return result;
-	}
-	var rootDomain = '.' + splitHostname().domain + '.' + splitHostname().type;
-	//console.log(splitHostname().domain);
+
 
 	//including javascript in web page when JSON is undifined(first time), creating json source attribute, appending in head tag.
 	if (typeof JSON === 'undefined') {
@@ -161,6 +150,20 @@
 	//code starts from here, above declare functions are used here.
 	var cookieObj = {};
 
+
+	function splitHostname() {
+		var result = {};
+		var regexParse = new RegExp('([a-z\-0-9]{2,63})\.([a-z\.]{2,5})$');
+		var urlParts = regexParse.exec(window.location.hostname);
+		result.domain = urlParts[1];
+		result.type = urlParts[2];
+		//result.subdomain = window.location.hostname.replace(result.domain + '.' + result.type, '').slice(0, -1);;
+		//console.log(result.subdomain);
+
+		return result;
+	}
+	var rootDomain = '.' + splitHostname().domain + '.' + splitHostname().type;
+
 	/* gclid = checks for presensce of adword.
 	 * function below sets all the required values (traffic detials) in an object name 'cookiObj',
 	 * which is later converted to JSON and saved as cookie,
@@ -218,13 +221,7 @@
 		}
 		//Pushes event to dataLayer to prompt that cookies have been saved successfully.
 		dataLayer.push({'event': 'trafficSrcCookieSet'})
-		// Creates an event in jQuery on script ready.
-		// jQuery.event.trigger({
-		// 	type: "Traffic_Source_Ready",
-		// 	message: "Traffic Source Ready",
-		// 	cookieData:getTrafficSrcCookie(),
-		// 	time: new Date()
-		// });
+
 		document.addEventListener("name-of-event", function(e) {
 			//console.log(e.type);
 		});

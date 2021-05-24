@@ -8,41 +8,40 @@
    * Data is stored in the __utmzz cookie in the following format; brackets
    * indicate optional data and are aexcluded from the stored string:
    *
-   * utmcsr=SOURCE|utmcmd=MEDIUM[|utmccn=CAMPAIGN][|utmcct=CONTENT]
-   * [|utmctr=TERM/KEYWORD]
+   * source=SOURCE|medium=MEDIUM[|campaign=CAMPAIGN][|content=CONTENT]
+   * [|term=TERM/KEYWORD]
    *
    * e.g.:
    *
-   * utmcsr=example.com|utmcmd=affl-link|utmccn=foo|utmcct=bar|utmctr=biz
+   * source=example.com|medium=affl-link|campaign=foo|content=bar|term=biz
    *
    * Follows the same campaign assignment/overriding flow as Classic Analytics.
    */
 (function(document) {
 
 	var referrer = document.referrer;
-	var gaReferral = {
-		'utmcsr': '(direct)',
-		'utmcmd': '(none)',
-		'utmccn': '(not set)'
+	var trafficSource = {
+		'source': '(direct)',
+		'medium': '(none)',
+		'campaign': '(not set)'
 	};
-	var thisHostname = document.location.hostname;
-	var thisDomain = getDomain_(thisHostname);
-	var referringDomain = getDomain_(document.referrer);
+	var thisDomain = getDomain_(document.location.hostname);
+	var referringDomain = getDomain_(referrer);
 	var sessionCookie = getCookie_('__utmzzses');
 	var cookieExpiration = new Date(+new Date() + 1000 * 60 * 60 * 24 * 30 * 6);
 	var qs = document.location.search.replace('?', '');
 	var hash = document.location.hash.replace('#', '');
-	var gaParams = parseGoogleParams(qs + '#' + hash);
-	var referringInfo = parseGaReferrer(referrer);
+	var queryString = getQueryStringParams(qs + '#' + hash);
+	var referrerData = getReferrerData(referrer);
 	var storedVals = getCookie_('__utmz') || getCookie_('__utmzz');
 	var newCookieVals = [];
 	var keyMap = {
-		'utm_source': 'utmcsr',
-		'utm_medium': 'utmcmd',
-		'utm_campaign': 'utmccn',
-		'utm_content': 'utmcct',
-		'utm_term': 'utmctr',
-		'gclid': 'utmgclid',
+		'utm_source': 'source',
+		'utm_medium': 'medium',
+		'utm_campaign': 'campaign',
+		'utm_content': 'content',
+		'utm_term': 'term',
+		'gclid': 'gclid',
 		'dclid': 'utmdclid'
 	};
 	var keyName,
@@ -54,39 +53,33 @@
 		len,
 		i;
 
-	if (sessionCookie && referringDomain === thisDomain) {
-
-		gaParams = null;
-		referringInfo = null;
-
+	if (sessionCookie && referringDomain === thisDomain) { //bug here because referringDomain can be changed in  parseGaReferrer
+		queryString = null;
+		referrerData = null;
 	}
 
-	if (gaParams && (gaParams.utm_source || gaParams.gclid || gaParams.dclid)) {
+	if (queryString && (queryString.utm_source || queryString.gclid || queryString.dclid)) {
 
-		for (key in gaParams) {
+		for (key in queryString) {
 
-			if (typeof gaParams[key] !== 'undefined') {
+			if (typeof queryString[key] !== 'undefined') {
 
 				keyName = keyMap[key];
-				gaReferral[keyName] = gaParams[key];
+				trafficSource[keyName] = queryString[key];
 
 			}
 
 		}
 
-		if (gaParams.gclid || gaParams.dclid) {
-
-			gaReferral.utmcsr = 'google';
-			gaReferral.utmcmd = gaReferral.utmgclid ? 'cpc' : 'cpm';
-
+		if (queryString.gclid || queryString.dclid) {
+			trafficSource.source = 'google';
+			trafficSource.medium = trafficSource.gclid ? 'cpc' : 'cpm';
 		}
 
-	} else if (referringInfo) {
-
-		gaReferral.utmcsr = referringInfo.source;
-		gaReferral.utmcmd = referringInfo.medium;
-		if (referringInfo.term) gaReferral.utmctr = referringInfo.term;
-
+	} else if (referrerData) {
+		trafficSource.source = referrerData.source;
+		trafficSource.medium = referrerData.medium;
+		if (referrerData.term) trafficSource.term = referrerData.term;
 	} else if (storedVals) {
 
 		values = {};
@@ -100,25 +93,19 @@
 			values[_key] = _val[1];
 
 		}
-
-		gaReferral = values;
-
+		trafficSource = values;
 	}
 
-	for (key in gaReferral) {
-
-		if (typeof gaReferral[key] !== 'undefined') {
-
-			newCookieVals.push(key + '=' + gaReferral[key]);
-
+	for (key in trafficSource) {
+		if (typeof trafficSource[key] !== 'undefined') {
+			newCookieVals.push(key + '=' + trafficSource[key]);
 		}
-
 	}
 
 	writeCookie_('__utmzz', newCookieVals.join('|'), cookieExpiration, '/', thisDomain);
 	writeCookie_('__utmzzses', 1, null, '/', thisDomain);
 
-	function parseGoogleParams(str) {
+	function getQueryStringParams(str) {
 
 		var campaignParams = ['source', 'medium', 'campaign', 'term', 'content'];
 		var regex = new RegExp('(utm_(' + campaignParams.join('|') + ')|(d|g)clid)=.*?([^&#]*|$)', 'gi');
@@ -151,9 +138,9 @@
 
 	}
 
-	function parseGaReferrer(referrer) {
+	function getReferrerData(referrer) {
 
-		if (!referrer) return;
+		if (!referrer)  { return };
 
 		var searchEngines = {
 			'daum.net': {
@@ -311,9 +298,7 @@
 
 		// Shim for the billion google search engines
 		if (a.hostname.indexOf('google') > -1) {
-
 			referringDomain = 'google';
-
 		}
 
 		if (searchEngines[referringDomain]) {
@@ -331,22 +316,17 @@
 
 			values.source = a.hostname;
 			values.medium = 'referral';
-
 		}
-
 		return values;
-
 	}
 
 	function writeCookie_(name, value, expiration, path, domain) {
-
 		var str = name + '=' + value + ';';
 		if (expiration) str += 'Expires=' + expiration.toGMTString() + ';';
 		if (path) str += 'Path=' + path + ';';
 		if (domain) str += 'Domain=' + domain + ';';
 
 		document.cookie = str;
-
 	}
 
 	function getCookie_(name) {
@@ -359,18 +339,13 @@
 	}
 
 	function getDomain_(url) {
-
 		if (!url) return;
-
 		var a = document.createElement('a');
 		a.href = url;
-
 		try {
-
+			//this regex will get you you random stuff for 3 letter domains. Not good for referrer and SE with tiny domains.
 			return a.hostname.match(/[^.]*\.[^.]{2,3}(?:\.[^.]{2,3})?$/)[0];
-
 		} catch (squelch) { }
-
 	}
 
 })(document);
