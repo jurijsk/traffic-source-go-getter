@@ -405,5 +405,4 @@ new TrafficSourceGoGetter({
 	auxQueryStringParams: {'kw': 'custom_keywords', 'q': 'query', 'gclid': 'gclid'},
 	//domain: set the domain if needed. other default cookie bahaviour
 	//debuging: true
-}
-);
+});
