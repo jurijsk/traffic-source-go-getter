@@ -1,11 +1,12 @@
 {
   "compilerOptions": {
     "module": "commonjs",
-    "target": "es3",
+    "target": "ES5",
     "outDir": "dist",
     "rootDir": ".",
-    "sourceMap": true,
+    "sourceMap": false,
     "strict": false,
-	"lib": ["ES2015", "DOM"]
+	"lib": ["ES2015", "DOM"],
+	"removeComments": true
   }
 }
