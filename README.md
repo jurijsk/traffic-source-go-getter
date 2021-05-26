@@ -140,7 +140,14 @@ The method will be colled to persist or get the data. Erase scenario is not used
 
 Set to `true` to get some messages in the console.
 
+### Honorable mentions
 
+I was not the first to think about it, I lookt into the work of others. Namely:
 
+* [trafficSourceTracker.js](https://github.com/marketlytics/trafficSourceTracker.js) by [marketlytics](https://github.com/marketlytics)
+* [utm-alternative](https://github.com/dm-guy/utm-alternative) by [dm-guy](https://github.com/dm-guy)
+* and [utmz-cookie-replicator-gtm](https://www.bounteous.com/insights/2017/12/18/utmz-cookie-replicator-gtm/) by [Lovely people at bounteous.com](https://www.bounteous.com)
+
+Thanks a bunch!
 
 
