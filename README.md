@@ -1,6 +1,6 @@
 ## What is that?
 
-This script store the last non-direct traffic source information with a couple of additional features.
+This script to store the last non-direct traffic source information for later with a couple of additional features.
 
 ## Why it is needed?
 
