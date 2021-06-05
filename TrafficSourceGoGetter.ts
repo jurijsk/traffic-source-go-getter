@@ -21,7 +21,7 @@ class QueryStringParams {
 		public msclkid?: string) { }
 }
 
-class TrafficSource {
+class TrafficData {
 	static readonly sourceDirect = '(direct)';
 	static readonly sourceGoogle = 'google';
 	static sourceBing = 'bing';
@@ -32,12 +32,12 @@ class TrafficSource {
 	static mediumDisplay = 'display';
 	static sourceFacebook: 'facebook';
 
-	static gaDefaults = new TrafficSource(
-		TrafficSource.sourceDirect,
-		TrafficSource.mediumNone,
-		TrafficSource.notSet,
-		TrafficSource.notSet,
-		TrafficSource.notSet);
+	static gaDefaults = new TrafficData(
+		TrafficData.sourceDirect,
+		TrafficData.mediumNone,
+		TrafficData.notSet,
+		TrafficData.notSet,
+		TrafficData.notSet);
 
 	constructor(
 		public source?: string,
@@ -48,7 +48,7 @@ class TrafficSource {
 	}
 }
 
-type TrafficSourcePersistor = (trafficSource?: null | TrafficSource) => TrafficSource;
+type TrafficSourcePersistor = (trafficSource?: null | TrafficData) => TrafficData;
 
 interface TrafficSourceGoGetterOptions {
 	/** Website domain without protocol and subdomains. E.g. google.com */
@@ -65,7 +65,7 @@ interface TrafficSourceGoGetterOptions {
 }
 
 class TrafficSourceGoGetter {
-	private trafficSource: TrafficSource = null;
+	private trafficData: TrafficData = null;
 	private options: TrafficSourceGoGetterOptions;
 	private debuging = false;
 	constructor(options?: TrafficSourceGoGetterOptions) {
@@ -73,7 +73,8 @@ class TrafficSourceGoGetter {
 		this.options = Object.assign({
 			persist: true,
 			cookieName: "traffic_source",
-			debuging: false
+			debuging: false,
+			auxQueryStringParams: {}
 		}, options);
 
 		this.debuging = this.options.debuging;
@@ -107,7 +108,7 @@ class TrafficSourceGoGetter {
 			}
 		}
 
-		this.trafficSource = best;
+		this.trafficData = best;
 		//if not direct, or some aux params
 		if(current.source || update) {
 			this.persistTrafficSource(best);
@@ -116,7 +117,7 @@ class TrafficSourceGoGetter {
 		}
 	}
 
-	private persistTrafficSource(trafficSource: TrafficSource) {
+	private persistTrafficSource(trafficSource: TrafficData) {
 		if(this.options.persist === false) {
 			return;
 		} else if(this.options.persist === true) {
@@ -132,14 +133,14 @@ class TrafficSourceGoGetter {
 		}
 	}
 
-	private getStoredTrafficSource(): TrafficSource {
+	private getStoredTrafficSource(): TrafficData {
 		if(this.options.persist === false) {
 			//remove cookie?
 			return null;
 		} else if(this.options.persist === true) {
 			let cval = this.readCookie(this.options.cookieName);
 			if(cval) {
-				let trafficSource = JSON.parse(cval) as TrafficSource;
+				let trafficSource = JSON.parse(cval) as TrafficData;
 				return trafficSource;
 			}
 		} else if(this.options.persist instanceof Function) {
@@ -158,11 +159,11 @@ class TrafficSourceGoGetter {
 	 * in GA (https://support.google.com/analytics/answer/6205762#flowchart)
 	 */
 	public getGATrafficSource() {
-		let result = Object.assign(new TrafficSource(), TrafficSource.gaDefaults);
+		let result = Object.assign(new TrafficData(), TrafficData.gaDefaults);
 
-		for(const key in this.trafficSource) {
-			if(Object.prototype.hasOwnProperty.call(this.trafficSource, key) && this.trafficSource[key]) {
-				result[key] = this.trafficSource[key];
+		for(const key in this.trafficData) {
+			if(Object.prototype.hasOwnProperty.call(this.trafficData, key) && this.trafficData[key]) {
+				result[key] = this.trafficData[key];
 			}
 		}
 		return result;
@@ -172,14 +173,45 @@ class TrafficSourceGoGetter {
 	 * Return best know traffic source or null if traffic is direct and not aux parameters found
 	 */
 	public getTrafficSource() {
-		return this.trafficSource;
+		return this.trafficData;
+	}
+
+	//same as Measuremnt Protocol params
+	private propMap = {
+		source: 'cs',
+		medium: 'cm',
+		campaign: 'cn',
+		term: 'ck',
+		content: 'cc'
+	}
+
+	public toString(current = false){
+		let srt = '';
+
+		let trafficData = !current ? this.trafficData : this.parseCurrentSource();
+
+		//let map = Object.assign({}, this.propMap, this.options.auxQueryStringParams);
+		let map = this.propMap;
+		for (const key in trafficData) {
+			if (Object.prototype.hasOwnProperty.call(this.trafficData, key)) {
+				const value = trafficData[key] || '';
+				let shorthand = map[key];
+				if(shorthand){
+					srt += shorthand;
+				}else{
+					srt += key;
+				}
+				srt += `=${value};`
+			}
+		}
+		return srt;
 	}
 
 	private parseCurrentSource() {
 		let query = this.getQueryStringParams(document.location.search.replace('?', ''), this.options.auxQueryStringParams);
 		let referrer = this.getReferrerData(this.getHostname(document.referrer), this.options.domain);
 
-		let trafficSource = new TrafficSource();
+		let trafficSource = new TrafficData();
 
 		//start with weakest, and override with the strongest factor (to avoid nesting)
 
@@ -189,18 +221,18 @@ class TrafficSourceGoGetter {
 		if(query.fbclid) {
 			//&fbclid does not give an idea if the it was paid or not.
 			//alwasy use utms with Facebook
-			trafficSource.source = TrafficSource.sourceFacebook;
+			trafficSource.source = TrafficData.sourceFacebook;
 		}
 		if(query.gclid || query.dclid) {
-			trafficSource.source = TrafficSource.sourceGoogle;
-			trafficSource.medium = query.gclid ? TrafficSource.mediumCPC : TrafficSource.mediumDisplay;
+			trafficSource.source = TrafficData.sourceGoogle;
+			trafficSource.medium = query.gclid ? TrafficData.mediumCPC : TrafficData.mediumDisplay;
 		}
 		if(query.msclkid) {
 			//https://support.google.com/searchads/answer/7342044
 			//often times &msclkid is present with &gclid and &gclsrc == '3p.ds' meaning that it is bing
 			//therefore overriding
-			trafficSource.source = TrafficSource.sourceBing;
-			trafficSource.medium = TrafficSource.mediumCPC;
+			trafficSource.source = TrafficData.sourceBing;
+			trafficSource.medium = TrafficData.mediumCPC;
 		}
 		if(query.utm_source) {
 			//always give priority to UTM
@@ -332,8 +364,8 @@ class TrafficSourceGoGetter {
 	private USE_HOSTNAME = true;
 	//https://support.google.com/analytics/answer/2795821
 	private searchEngines = {
-		'www.google.': TrafficSource.sourceGoogle,
-		'www.bing.': TrafficSource.sourceBing,
+		'www.google.': TrafficData.sourceGoogle,
+		'www.bing.': TrafficData.sourceBing,
 		'www.baidu.': 'baidu',
 		'www.yahoo.': this.USE_HOSTNAME,
 		'yandex.': this.USE_HOSTNAME,
@@ -402,7 +434,7 @@ class TrafficSourceGoGetter {
 }
 
 new TrafficSourceGoGetter({
-	auxQueryStringParams: {'kw': 'custom_keywords', 'q': 'query', 'gclid': 'gclid'},
+	//auxQueryStringParams: {'kw': 'kw', 'q': 'query', 'gclid': 'gclid'},
 	//domain: set the domain if needed. other default cookie bahaviour
-	//debuging: true
+	debuging: true
 });

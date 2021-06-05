@@ -20,33 +20,40 @@ var QueryStringParams = (function () {
     }
     return QueryStringParams;
 }());
-var TrafficSource = (function () {
-    function TrafficSource(source, medium, campaign, term, content) {
+var TrafficData = (function () {
+    function TrafficData(source, medium, campaign, term, content) {
         this.source = source;
         this.medium = medium;
         this.campaign = campaign;
         this.term = term;
         this.content = content;
     }
-    TrafficSource.sourceDirect = '(direct)';
-    TrafficSource.sourceGoogle = 'google';
-    TrafficSource.sourceBing = 'bing';
-    TrafficSource.mediumNone = '(none)';
-    TrafficSource.notSet = '(not set)';
-    TrafficSource.mediumCPC = 'cpc';
-    TrafficSource.mediumDisplay = 'display';
-    TrafficSource.gaDefaults = new TrafficSource(TrafficSource.sourceDirect, TrafficSource.mediumNone, TrafficSource.notSet, TrafficSource.notSet, TrafficSource.notSet);
-    return TrafficSource;
+    TrafficData.sourceDirect = '(direct)';
+    TrafficData.sourceGoogle = 'google';
+    TrafficData.sourceBing = 'bing';
+    TrafficData.mediumNone = '(none)';
+    TrafficData.notSet = '(not set)';
+    TrafficData.mediumCPC = 'cpc';
+    TrafficData.mediumDisplay = 'display';
+    TrafficData.gaDefaults = new TrafficData(TrafficData.sourceDirect, TrafficData.mediumNone, TrafficData.notSet, TrafficData.notSet, TrafficData.notSet);
+    return TrafficData;
 }());
 var TrafficSourceGoGetter = (function () {
     function TrafficSourceGoGetter(options) {
         var _a;
-        this.trafficSource = null;
+        this.trafficData = null;
         this.debuging = false;
+        this.propMap = {
+            source: 'cs',
+            medium: 'cm',
+            campaign: 'cn',
+            term: 'ck',
+            content: 'cc'
+        };
         this.USE_HOSTNAME = true;
         this.searchEngines = {
-            'www.google.': TrafficSource.sourceGoogle,
-            'www.bing.': TrafficSource.sourceBing,
+            'www.google.': TrafficData.sourceGoogle,
+            'www.bing.': TrafficData.sourceBing,
             'www.baidu.': 'baidu',
             'www.yahoo.': this.USE_HOSTNAME,
             'yandex.': this.USE_HOSTNAME,
@@ -116,7 +123,8 @@ var TrafficSourceGoGetter = (function () {
         this.options = Object.assign({
             persist: true,
             cookieName: "traffic_source",
-            debuging: false
+            debuging: false,
+            auxQueryStringParams: {}
         }, options);
         this.debuging = this.options.debuging;
         this.debug(this.options);
@@ -139,7 +147,7 @@ var TrafficSourceGoGetter = (function () {
                 }
             }
         }
-        this.trafficSource = best;
+        this.trafficData = best;
         if (current.source || update) {
             this.persistTrafficSource(best);
         }
@@ -178,39 +186,59 @@ var TrafficSourceGoGetter = (function () {
                 return this.options.persist();
             }
             catch (error) {
-                this.log(error);
+                this.debug(error);
             }
         }
         return null;
     };
     TrafficSourceGoGetter.prototype.getGATrafficSource = function () {
-        var result = Object.assign(new TrafficSource(), TrafficSource.gaDefaults);
-        for (var key in this.trafficSource) {
-            if (Object.prototype.hasOwnProperty.call(this.trafficSource, key) && this.trafficSource[key]) {
-                result[key] = this.trafficSource[key];
+        var result = Object.assign(new TrafficData(), TrafficData.gaDefaults);
+        for (var key in this.trafficData) {
+            if (Object.prototype.hasOwnProperty.call(this.trafficData, key) && this.trafficData[key]) {
+                result[key] = this.trafficData[key];
             }
         }
         return result;
     };
     TrafficSourceGoGetter.prototype.getTrafficSource = function () {
-        return this.trafficSource;
+        return this.trafficData;
+    };
+    TrafficSourceGoGetter.prototype.toString = function (current) {
+        if (current === void 0) { current = false; }
+        var srt = '';
+        var trafficData = !current ? this.trafficData : this.parseCurrentSource();
+        var map = this.propMap;
+        for (var key in trafficData) {
+            if (Object.prototype.hasOwnProperty.call(this.trafficData, key)) {
+                var value = trafficData[key] || '';
+                var shorthand = map[key];
+                if (shorthand) {
+                    srt += shorthand;
+                }
+                else {
+                    srt += key;
+                }
+                srt += "=" + value + ";";
+            }
+        }
+        return srt;
     };
     TrafficSourceGoGetter.prototype.parseCurrentSource = function () {
         var _a;
         var query = this.getQueryStringParams(document.location.search.replace('?', ''), this.options.auxQueryStringParams);
         var referrer = this.getReferrerData(this.getHostname(document.referrer), this.options.domain);
-        var trafficSource = new TrafficSource();
+        var trafficSource = new TrafficData();
         trafficSource.source = referrer.source;
         if (query.fbclid) {
-            trafficSource.source = TrafficSource.sourceFacebook;
+            trafficSource.source = TrafficData.sourceFacebook;
         }
         if (query.gclid || query.dclid) {
-            trafficSource.source = TrafficSource.sourceGoogle;
-            trafficSource.medium = query.gclid ? TrafficSource.mediumCPC : TrafficSource.mediumDisplay;
+            trafficSource.source = TrafficData.sourceGoogle;
+            trafficSource.medium = query.gclid ? TrafficData.mediumCPC : TrafficData.mediumDisplay;
         }
         if (query.msclkid) {
-            trafficSource.source = TrafficSource.sourceBing;
-            trafficSource.medium = TrafficSource.mediumCPC;
+            trafficSource.source = TrafficData.sourceBing;
+            trafficSource.medium = TrafficData.mediumCPC;
         }
         if (query.utm_source) {
             trafficSource.source = query.utm_source;
@@ -327,6 +355,5 @@ var TrafficSourceGoGetter = (function () {
     return TrafficSourceGoGetter;
 }());
 new TrafficSourceGoGetter({
-    auxQueryStringParams: { 'kw': 'custom_keywords', 'q': 'query', 'gclid': 'gclid' },
     debuging: true
 });
