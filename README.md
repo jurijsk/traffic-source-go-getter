@@ -49,9 +49,11 @@ var trafficSource = (new TrafficSourceGoGetter()).getTrafficSource();
 {source: "(direct)", medium: "(none)", campaign: "(not set)", term: "(not set)", content: "(not set)"}
 ```
 
-### `toString()` function
+#### `toString(current = false)` function
 
-As and alternative to get data `toString(current = false)` function return data in shorthanded format
+current: if true, ignores stored cookie and parses all the data again to return,
+
+As and alternative to get data `toString()` function return data in shorthanded format:
 
 ```
 cs=campaign-source;cm=campaign-medium;cn=;auxParams_prop_value=param-value-from-queryString;
