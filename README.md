@@ -47,8 +47,17 @@ var trafficSource = (new TrafficSourceGoGetter()).getTrafficSource();
 
 //for direct traffic returns
 {source: "(direct)", medium: "(none)", campaign: "(not set)", term: "(not set)", content: "(not set)"}
+```
+
+### `toString()` function
+
+As and alternative to get data `toString(current = false)` function return data in shorthanded format
 
 ```
+cs=campaign-source;cm=campaign-medium;cn=;auxParams_prop_value=param-value-from-queryString;
+//
+```
+Shorthand param manes match [Measurement Protocol campaign params](https://developers.google.com/analytics/devguides/collection/protocol/v1/parameters#trafficsources)
 
 ### That is the logic?
 
