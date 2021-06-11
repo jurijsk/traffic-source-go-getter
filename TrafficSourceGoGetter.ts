@@ -61,23 +61,23 @@ interface TrafficSourceGoGetterOptions {
 	 */
 	persist?: boolean | TrafficSourcePersistor,
 	cookieName?: string,
-	debuging?: boolean,
+	debugging?: boolean,
 }
 
 class TrafficSourceGoGetter {
 	private trafficData: TrafficData = null;
 	private options: TrafficSourceGoGetterOptions;
-	private debuging = false;
+	private debugging = false;
 	constructor(options?: TrafficSourceGoGetterOptions) {
 		options = options || {};
 		this.options = Object.assign({
 			persist: true,
 			cookieName: "traffic_source",
-			debuging: false,
+			debugging: false,
 			auxQueryStringParams: {}
 		}, options);
 
-		this.debuging = this.options.debuging;
+		this.debugging = this.options.debugging;
 
 		this.debug(this.options);
 
@@ -106,6 +106,9 @@ class TrafficSourceGoGetter {
 					}
 				}
 			}
+		} else {
+			//current is direct but it still the best info we have.
+			best = current;
 		}
 
 		this.trafficData = best;
@@ -358,7 +361,7 @@ class TrafficSourceGoGetter {
 	}
 
 	debug(...data: any[]) {
-		this.debuging && console.log("TGG: ", data);
+		this.debugging && console.log("TGG: ", data);
 	}
 
 	private USE_HOSTNAME = true;
@@ -436,5 +439,5 @@ class TrafficSourceGoGetter {
 new TrafficSourceGoGetter({
 	//auxQueryStringParams: {'kw': 'kw', 'q': 'query', 'gclid': 'gclid'},
 	//domain: set the domain if needed. other default cookie bahaviour
-	debuging: true
+	debugging: true
 });

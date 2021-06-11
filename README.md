@@ -142,7 +142,7 @@ The method will be colled to persist or get the data. Erase scenario is not used
 
 `default`: `traffic_source`
 
-### `debuging`
+### `debugging`
 
 `type:` `boolean`
 

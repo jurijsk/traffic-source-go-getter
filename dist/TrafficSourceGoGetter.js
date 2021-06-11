@@ -42,7 +42,7 @@ var TrafficSourceGoGetter = (function () {
     function TrafficSourceGoGetter(options) {
         var _a;
         this.trafficData = null;
-        this.debuging = false;
+        this.debugging = false;
         this.propMap = {
             source: 'cs',
             medium: 'cm',
@@ -123,10 +123,10 @@ var TrafficSourceGoGetter = (function () {
         this.options = Object.assign({
             persist: true,
             cookieName: "traffic_source",
-            debuging: false,
+            debugging: false,
             auxQueryStringParams: {}
         }, options);
-        this.debuging = this.options.debuging;
+        this.debugging = this.options.debugging;
         this.debug(this.options);
         var current = this.parseCurrentSource();
         var stored = this.getStoredTrafficSource();
@@ -146,6 +146,9 @@ var TrafficSourceGoGetter = (function () {
                     }
                 }
             }
+        }
+        else {
+            best = current;
         }
         this.trafficData = best;
         if (current.source || update) {
@@ -350,10 +353,10 @@ var TrafficSourceGoGetter = (function () {
         for (var _i = 0; _i < arguments.length; _i++) {
             data[_i] = arguments[_i];
         }
-        this.debuging && console.log("TGG: ", data);
+        this.debugging && console.log("TGG: ", data);
     };
     return TrafficSourceGoGetter;
 }());
 new TrafficSourceGoGetter({
-    debuging: true
+    debugging: true
 });
