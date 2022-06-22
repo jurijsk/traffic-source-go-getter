@@ -59,7 +59,7 @@ As and alternative to get data `toString()` function return data in shorthanded 
 cs=campaign-source;cm=campaign-medium;cn=;auxParams_prop_value=param-value-from-queryString;
 //
 ```
-Shorthand param manes match [Measurement Protocol campaign params](https://developers.google.com/analytics/devguides/collection/protocol/v1/parameters#trafficsources)
+Shorthand param names match [Measurement Protocol campaign params](https://developers.google.com/analytics/devguides/collection/protocol/v1/parameters#trafficsources)
 
 ### That is the logic?
 
@@ -103,7 +103,7 @@ If you need to extract and custom query string params from URL, pass and object 
 E.g. when `{'q': 'search_query'}` and `&q` is present the call to `getter.getTrackingSource with result:
 ```
 {
-  'search_query': 'Aaah, my butt looks like pizza'
+  'search_query': 'Aaah, my butt looks like a pizza'
   ...
 }
 ```
